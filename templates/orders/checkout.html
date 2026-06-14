@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Checkout – ShopEase{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
+
+  <!-- Steps -->
+  <div class="flex items-center gap-2 mb-8 text-sm">
+    <span class="bg-gray-900 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">1</span>
+    <span class="font-medium text-gray-900">Shipping</span>
+    <span class="flex-1 h-px bg-gray-300 mx-2"></span>
+    <span class="bg-gray-200 text-gray-500 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">2</span>
+    <span class="text-gray-400">Payment</span>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Shipping form -->
+      <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Shipping Information</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {% for field in form %}
+          <div {% if field.name == 'address_line1' or field.name == 'address_line2' or field.name == 'notes' %}class="sm:col-span-2"{% endif %}>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Order summary -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5 h-fit">
+        <h2 class="font-bold text-gray-900 text-lg mb-4">Order Summary</h2>
+        <div class="space-y-2 mb-4">
+          {% for item in items %}
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">{{ item.product.name }} × {{ item.qty }}</span>
+            <span class="font-medium">₹{{ item.subtotal }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="border-t border-gray-100 pt-3 space-y-1 text-sm">
+          <div class="flex justify-between text-gray-600"><span>Subtotal</span><span>₹{{ subtotal }}</span></div>
+          <div class="flex justify-between text-gray-600">
+            <span>Shipping</span>
+            {% if shipping == 0 %}<span class="text-green-600 font-medium">FREE</span>{% else %}<span>₹{{ shipping }}</span>{% endif %}
+          </div>
+          <div class="flex justify-between font-bold text-gray-900 text-base pt-2 border-t border-gray-100">
+            <span>Total</span><span>₹{{ total }}</span>
+          </div>
+        </div>
+        <button type="submit"
+          class="w-full bg-gray-900 text-white font-semibold py-3 rounded-lg mt-5 hover:bg-gray-700 transition">
+          Continue to Payment →
+        </button>
+        <p class="text-xs text-center text-gray-400 mt-3">🔒 Secure checkout powered by Stripe</p>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

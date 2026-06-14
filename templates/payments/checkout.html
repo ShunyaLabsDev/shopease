@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Payment – ShopEase{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Steps -->
+  <div class="flex items-center gap-2 mb-8 text-sm">
+    <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">✓</span>
+    <span class="text-gray-400">Shipping</span>
+    <span class="flex-1 h-px bg-gray-300 mx-2"></span>
+    <span class="bg-gray-900 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">2</span>
+    <span class="font-medium text-gray-900">Payment</span>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm">
+
+    <!-- Order summary top -->
+    <div class="bg-gray-50 rounded-xl p-4 mb-6 flex items-center justify-between">
+      <div>
+        <p class="text-xs text-gray-500">Order #{{ order.order_number }}</p>
+        <p class="font-semibold text-gray-800">{{ order.full_name }} · {{ order.city }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-gray-500">Amount</p>
+        <p class="text-xl font-bold text-gray-900">₹{{ order.total }}</p>
+      </div>
+    </div>
+
+    <h2 class="text-lg font-bold text-gray-900 mb-4">💳 Card Payment</h2>
+
+    <!-- Stripe Card Element -->
+    <div id="payment-form">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Card Details</label>
+        <div id="card-element"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus-within:ring-2 focus-within:ring-gray-800 transition">
+        </div>
+        <div id="card-errors" class="text-red-500 text-sm mt-2 hidden"></div>
+      </div>
+
+      <button id="pay-btn"
+        class="w-full bg-gray-900 text-white font-semibold py-3 rounded-lg hover:bg-gray-700 transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+        <span id="btn-text">Pay ₹{{ order.total }} Securely</span>
+        <span id="btn-spinner" class="hidden">
+          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+        </span>
+      </button>
+
+      <!-- Test card hint -->
+      <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800">
+        <strong>Test Mode:</strong> Use card number <code class="bg-yellow-100 px-1 rounded">4242 4242 4242 4242</code>, any future expiry, any CVC.
+      </div>
+
+      <p class="text-xs text-center text-gray-400 mt-4">🔒 Payments are encrypted and secured by Stripe</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const stripe = Stripe('{{ stripe_publishable_key }}');
+  const elements = stripe.elements();
+
+  const style = {
+    base: {
+      fontSize: '15px',
+      color: '#1f2937',
+      fontFamily: 'system-ui, sans-serif',
+      '::placeholder': { color: '#9ca3af' }
+    },
+    invalid: { color: '#ef4444' }
+  };
+
+  const card = elements.create('card', { style });
+  card.mount('#card-element');
+
+  card.addEventListener('change', ({ error }) => {
+    const errEl = document.getElementById('card-errors');
+    if (error) {
+      errEl.textContent = error.message;
+      errEl.classList.remove('hidden');
+    } else {
+      errEl.classList.add('hidden');
+    }
+  });
+
+  const payBtn = document.getElementById('pay-btn');
+  const btnText = document.getElementById('btn-text');
+  const btnSpinner = document.getElementById('btn-spinner');
+
+  payBtn.addEventListener('click', async () => {
+    payBtn.disabled = true;
+    btnText.textContent = 'Processing…';
+    btnSpinner.classList.remove('hidden');
+
+    const { error, paymentIntent } = await stripe.confirmCardPayment(
+      '{{ client_secret }}',
+      { payment_method: { card } }
+    );
+
+    if (error) {
+      const errEl = document.getElementById('card-errors');
+      errEl.textContent = error.message;
+      errEl.classList.remove('hidden');
+      payBtn.disabled = false;
+      btnText.textContent = 'Pay ₹{{ order.total }} Securely';
+      btnSpinner.classList.add('hidden');
+    } else if (paymentIntent.status === 'succeeded') {
+      window.location.href = '{% url "payments:success" order.id %}';
+    }
+  });
+</script>
+{% endblock %}

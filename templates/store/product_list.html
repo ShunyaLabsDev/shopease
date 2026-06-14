@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Products – ShopEase{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-gray-500 mb-6">
+    <a href="{% url 'store:home' %}" class="hover:text-gray-800">Home</a>
+    <span class="mx-2">/</span>
+    <span class="text-gray-800">Products</span>
+    {% if query %}<span class="mx-2">/</span><span>"{{ query }}"</span>{% endif %}
+  </nav>
+
+  <div class="flex flex-col lg:flex-row gap-8">
+
+    <!-- ── Filters Sidebar ── -->
+    <aside class="lg:w-64 flex-shrink-0">
+      <form method="get" id="filter-form">
+        <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-6">
+
+          <h3 class="font-bold text-gray-900 text-lg">Filters</h3>
+
+          <!-- Search -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <input type="text" name="q" value="{{ query }}"
+              placeholder="Search products…"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-800" />
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <div class="space-y-1">
+              <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name="category" value="" {% if not selected_category %}checked{% endif %}
+                  onchange="document.getElementById('filter-form').submit()"
+                  class="accent-gray-900" />
+                <span>All Categories</span>
+              </label>
+              {% for cat in categories %}
+              <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name="category" value="{{ cat.slug }}"
+                  {% if selected_category == cat.slug %}checked{% endif %}
+                  onchange="document.getElementById('filter-form').submit()"
+                  class="accent-gray-900" />
+                <span>{{ cat.name }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Price Range -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Price Range (₹)</label>
+            <div class="flex gap-2">
+              <input type="number" name="min_price" value="{{ min_price }}" placeholder="Min"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none" />
+              <input type="number" name="max_price" value="{{ max_price }}" placeholder="Max"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- Sort -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+            <select name="sort" onchange="document.getElementById('filter-form').submit()"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-800">
+              <option value="" {% if not sort %}selected{% endif %}>Default</option>
+              <option value="newest" {% if sort == "newest" %}selected{% endif %}>Newest First</option>
+              <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>Price: Low → High</option>
+              <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>Price: High → Low</option>
+              <option value="name_asc" {% if sort == "name_asc" %}selected{% endif %}>Name A–Z</option>
+            </select>
+          </div>
+
+          <!-- In Stock -->
+          <div>
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" name="in_stock" value="1" {% if in_stock %}checked{% endif %}
+                onchange="document.getElementById('filter-form').submit()"
+                class="accent-gray-900 w-4 h-4" />
+              <span class="font-medium text-gray-700">In Stock Only</span>
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+            <button type="submit"
+              class="flex-1 bg-gray-900 text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition">
+              Apply
+            </button>
+            <a href="{% url 'store:product_list' %}"
+              class="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium text-center hover:bg-gray-50 transition">
+              Reset
+            </a>
+          </div>
+        </div>
+      </form>
+    </aside>
+
+    <!-- ── Product Grid ── -->
+    <div class="flex-1">
+      <!-- Result count & sort info -->
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-600">
+          Showing <strong>{{ products.start_index }}–{{ products.end_index }}</strong> of <strong>{{ total_count }}</strong> products
+        </p>
+      </div>
+
+      {% if products %}
+      <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for product in products %}
+        {% include "partials/product_card.html" %}
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if products.has_other_pages %}
+      <div class="flex justify-center items-center gap-2 mt-10">
+        {% if products.has_previous %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ products.previous_page_number }}"
+          class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition">← Prev</a>
+        {% endif %}
+
+        {% for num in products.paginator.page_range %}
+        {% if products.number == num %}
+        <span class="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium">{{ num }}</span>
+        {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ num }}"
+          class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if products.has_next %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}page={{ products.next_page_number }}"
+          class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition">Next →</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="text-center py-20">
+        <div class="text-6xl mb-4">🔍</div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">No products found</h3>
+        <p class="text-gray-500 mb-6">Try adjusting your filters or search term.</p>
+        <a href="{% url 'store:product_list' %}" class="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm hover:bg-gray-700 transition">Clear Filters</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}ShopEase – Home{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="bg-gradient-to-br from-gray-900 to-gray-700 text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col md:flex-row items-center gap-10">
+    <div class="flex-1 text-center md:text-left">
+      <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">Shop Smart,<br/>Live Better</h1>
+      <p class="text-gray-300 text-lg mb-8">Discover thousands of products with fast delivery and hassle-free returns.</p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+        <a href="{% url 'store:product_list' %}" class="bg-white text-gray-900 font-semibold px-8 py-3 rounded-lg hover:bg-gray-100 transition text-center">Shop Now</a>
+        <a href="{% url 'store:product_list' %}?in_stock=1" class="border border-white text-white font-semibold px-8 py-3 rounded-lg hover:bg-white hover:text-gray-900 transition text-center">In Stock</a>
+      </div>
+    </div>
+    <div class="flex-1 text-center hidden md:block">
+      <div class="text-9xl">🛍️</div>
+    </div>
+  </div>
+</section>
+
+<!-- Trust badges -->
+<section class="bg-white border-b">
+  <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm text-gray-600">
+    <div class="flex flex-col items-center gap-1"><span class="text-2xl">🚚</span><span class="font-medium">Free Delivery</span><span class="text-xs">Orders over ₹500</span></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-2xl">🔄</span><span class="font-medium">Easy Returns</span><span class="text-xs">30-day policy</span></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-2xl">🔒</span><span class="font-medium">Secure Payment</span><span class="text-xs">256-bit SSL</span></div>
+    <div class="flex flex-col items-center gap-1"><span class="text-2xl">💬</span><span class="font-medium">24/7 Support</span><span class="text-xs">Always here for you</span></div>
+  </div>
+</section>
+
+<!-- Categories -->
+{% if categories %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <h2 class="text-2xl font-bold text-gray-900 mb-6">Shop by Category</h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    {% for cat in categories %}
+    <a href="{% url 'store:product_list' %}?category={{ cat.slug }}"
+       class="bg-white rounded-xl border border-gray-200 p-4 text-center hover:shadow-md hover:border-gray-400 transition group">
+      {% if cat.image %}
+      <img src="{{ cat.image.url }}" alt="{{ cat.name }}" class="w-12 h-12 object-cover rounded-full mx-auto mb-2 group-hover:scale-105 transition" />
+      {% else %}
+      <div class="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl">🏷️</div>
+      {% endif %}
+      <p class="text-sm font-medium text-gray-700">{{ cat.name }}</p>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Featured Products -->
+{% if featured %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Featured Products</h2>
+    <a href="{% url 'store:product_list' %}" class="text-sm text-gray-600 hover:text-gray-900 underline">View all →</a>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    {% for product in featured %}
+    {% include "partials/product_card.html" %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Sale Banner -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+  <div class="bg-red-50 border border-red-200 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div>
+      <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded mb-2 inline-block">LIMITED TIME</span>
+      <h3 class="text-2xl font-bold text-gray-900">Hot Deals This Week</h3>
+      <p class="text-gray-600 mt-1">Save up to 50% on selected items</p>
+    </div>
+    <a href="{% url 'store:product_list' %}?sort=price_asc" class="bg-red-500 text-white font-semibold px-8 py-3 rounded-lg hover:bg-red-600 transition whitespace-nowrap">
+      Shop Deals
+    </a>
+  </div>
+</section>
+
+<!-- New Arrivals -->
+{% if new_arrivals %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">New Arrivals</h2>
+    <a href="{% url 'store:product_list' %}?sort=newest" class="text-sm text-gray-600 hover:text-gray-900 underline">View all →</a>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    {% for product in new_arrivals %}
+    {% include "partials/product_card.html" %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- On Sale -->
+{% if on_sale %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mb-4">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">🔥 On Sale</h2>
+    <a href="{% url 'store:product_list' %}" class="text-sm text-gray-600 hover:text-gray-900 underline">View all →</a>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    {% for product in on_sale %}
+    {% include "partials/product_card.html" %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

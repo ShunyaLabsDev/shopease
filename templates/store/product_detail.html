@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} – ShopEase{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-gray-500 mb-6">
+    <a href="{% url 'store:home' %}" class="hover:text-gray-800">Home</a>
+    <span class="mx-2">/</span>
+    <a href="{% url 'store:product_list' %}?category={{ product.category.slug }}" class="hover:text-gray-800">{{ product.category.name }}</a>
+    <span class="mx-2">/</span>
+    <span class="text-gray-800">{{ product.name }}</span>
+  </nav>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-10 bg-white rounded-2xl border border-gray-200 p-6 md:p-10">
+
+    <!-- Image -->
+    <div>
+      {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full rounded-xl object-cover max-h-96 md:max-h-none" />
+      {% else %}
+      <div class="w-full h-80 bg-gray-100 rounded-xl flex items-center justify-center text-6xl">🛍️</div>
+      {% endif %}
+      <!-- Gallery -->
+      {% if product.images.all %}
+      <div class="flex gap-2 mt-4 overflow-x-auto">
+        {% for img in product.images.all %}
+        <img src="{{ img.image.url }}" alt="{{ img.alt_text }}" class="w-20 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:border-gray-500 transition" />
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Info -->
+    <div>
+      <span class="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">{{ product.category.name }}</span>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mt-3 mb-2">{{ product.name }}</h1>
+
+      <!-- Rating -->
+      {% if product.review_count > 0 %}
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-yellow-400">
+          {% for i in "12345" %}
+          {% if forloop.counter <= product.avg_rating %}★{% else %}☆{% endif %}
+          {% endfor %}
+        </span>
+        <span class="text-sm text-gray-600">{{ product.avg_rating }} ({{ product.review_count }} reviews)</span>
+      </div>
+      {% endif %}
+
+      <!-- Price -->
+      <div class="flex items-center gap-3 mb-4">
+        {% if product.discount_price %}
+        <span class="text-3xl font-bold text-gray-900">₹{{ product.discount_price }}</span>
+        <span class="text-xl text-gray-400 line-through">₹{{ product.price }}</span>
+        <span class="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">-{{ product.discount_percent }}% OFF</span>
+        {% else %}
+        <span class="text-3xl font-bold text-gray-900">₹{{ product.price }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Stock -->
+      <div class="mb-4">
+        {% if product.in_stock %}
+        <span class="text-green-600 font-medium text-sm">✓ In Stock ({{ product.stock }} available)</span>
+        {% else %}
+        <span class="text-red-500 font-medium text-sm">✕ Out of Stock</span>
+        {% endif %}
+      </div>
+
+      <!-- Short description -->
+      {% if product.short_description %}
+      <p class="text-gray-600 text-sm mb-4">{{ product.short_description }}</p>
+      {% endif %}
+
+      <!-- Add to cart -->
+      {% if product.in_stock %}
+      <form action="{% url 'store:add_to_cart' product.id %}" method="post" class="flex gap-3 mb-4">
+        {% csrf_token %}
+        <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+          <button type="button" onclick="changeQty(-1)"
+            class="px-3 py-2 bg-gray-50 hover:bg-gray-100 font-bold text-lg transition">−</button>
+          <input type="number" name="qty" id="qty-input" value="1" min="1" max="{{ product.stock }}"
+            class="w-14 text-center border-0 focus:outline-none text-sm font-medium" />
+          <button type="button" onclick="changeQty(1)"
+            class="px-3 py-2 bg-gray-50 hover:bg-gray-100 font-bold text-lg transition">+</button>
+        </div>
+        <button type="submit"
+          class="flex-1 bg-gray-900 text-white font-semibold py-2 rounded-lg hover:bg-gray-700 transition">
+          🛒 Add to Cart
+        </button>
+      </form>
+      {% endif %}
+
+      <!-- Wishlist -->
+      <a href="{% url 'store:toggle_wishlist' product.id %}"
+        class="flex items-center gap-2 text-sm {% if in_wishlist %}text-red-500{% else %}text-gray-500{% endif %} hover:text-red-500 transition mb-6">
+        {% if in_wishlist %}❤️ Remove from Wishlist{% else %}♡ Add to Wishlist{% endif %}
+      </a>
+
+      <!-- Badges -->
+      <div class="border-t border-gray-100 pt-4 grid grid-cols-2 gap-3 text-xs text-gray-600">
+        <div class="flex items-center gap-2"><span>🚚</span><span>Free shipping over ₹500</span></div>
+        <div class="flex items-center gap-2"><span>🔄</span><span>30-day easy returns</span></div>
+        <div class="flex items-center gap-2"><span>🔒</span><span>Secure checkout</span></div>
+        <div class="flex items-center gap-2"><span>✅</span><span>Genuine products</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="bg-white rounded-2xl border border-gray-200 p-6 md:p-10 mt-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">Product Description</h2>
+    <div class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{{ product.description }}</div>
+  </div>
+
+  <!-- Reviews -->
+  <div class="bg-white rounded-2xl border border-gray-200 p-6 md:p-10 mt-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
+
+    {% if product.reviews.all %}
+    <div class="space-y-4 mb-8">
+      {% for review in product.reviews.all %}
+      <div class="border-b border-gray-100 pb-4">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-yellow-400 text-sm">
+            {% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
+          </span>
+          <strong class="text-sm text-gray-800">{{ review.title }}</strong>
+          <span class="text-xs text-gray-400 ml-auto">{{ review.user.get_full_name|default:review.user.email }} · {{ review.created_at|date:"M j, Y" }}</span>
+        </div>
+        <p class="text-sm text-gray-600">{{ review.body }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500 text-sm mb-6">No reviews yet. Be the first!</p>
+    {% endif %}
+
+    <!-- Write review -->
+    {% if user.is_authenticated and not user_reviewed %}
+    <div class="bg-gray-50 rounded-xl p-5">
+      <h3 class="font-semibold text-gray-800 mb-4">Write a Review</h3>
+      <form method="post">
+        {% csrf_token %}
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+            {{ review_form.rating }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            {{ review_form.title }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Review</label>
+            {{ review_form.body }}
+          </div>
+          <button type="submit"
+            class="bg-gray-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition">
+            Submit Review
+          </button>
+        </div>
+      </form>
+    </div>
+    {% elif not user.is_authenticated %}
+    <p class="text-sm text-gray-500">
+      <a href="{% url 'accounts:login' %}" class="text-gray-900 font-medium underline">Login</a> to write a review.
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Related products -->
+  {% if related %}
+  <div class="mt-10">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">You Might Also Like</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {% for product in related %}
+      {% include "partials/product_card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+function changeQty(delta) {
+  const input = document.getElementById('qty-input');
+  const max = parseInt(input.max);
+  let val = parseInt(input.value) + delta;
+  input.value = Math.max(1, Math.min(val, max));
+}
+</script>
+{% endblock %}
