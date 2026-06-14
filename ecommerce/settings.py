@@ -114,3 +114,10 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "ShopEase <noreply@shopease
 
 # Sessions – cart stored in DB session
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
+
+# Render deployment fix
+import sys
+if not DEBUG:
+    CSRF_TRUSTED_ORIGINS = [
+        "https://*.onrender.com",
+    ]
